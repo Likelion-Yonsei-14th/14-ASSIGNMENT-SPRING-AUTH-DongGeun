@@ -12,7 +12,7 @@ public class MemberResponse {
     private String email;
     private String nickname;
 
-    public static MemberResponse of(Member member) {
+    public static MemberResponse from(Member member) {
         return new MemberResponse(
                 member.getId(), 
                 member.getEmail(), 

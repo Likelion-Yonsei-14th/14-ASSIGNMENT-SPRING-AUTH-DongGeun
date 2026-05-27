@@ -1,17 +1,20 @@
 package com.example.shop_app.controller;
 
-import com.example.shop_app.dto.DeleteResponse;
+import com.example.shop_app.config.CustomUserDetails;
+import com.example.shop_app.domain.Member;
 import com.example.shop_app.dto.ProductCreateRequest;
 import com.example.shop_app.dto.ProductResponse;
 import com.example.shop_app.dto.ProductUpdateRequest;
+import com.example.shop_app.service.MemberService;
 import com.example.shop_app.service.ProductService;
 
-import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,24 +30,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
     
     private final ProductService productService;
+    private final MemberService memberService;
 
-    @Operation(summary = "상품 생성")
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductCreateRequest request) {
-        ProductResponse response = productService.createProduct(request);
+    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductCreateRequest request,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Member member = memberService.findMemberById(userDetails.getMemberId());
+        ProductResponse response = productService.createProduct(request, member);
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(response);
     }
 
-    @Operation(summary = "상품 단건 조회")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable("productId") Long productId) {
         ProductResponse response = productService.getProduct(productId);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "상품 전체 조회")
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         List<ProductResponse> response = productService.getAllProducts();
@@ -52,22 +55,23 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "상품 수정")
     @PatchMapping("/{productId}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable("productId") Long productId,
-            @RequestBody ProductUpdateRequest request
+            @RequestBody ProductUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     )   {
-        ProductResponse response = productService.updateProduct(productId, request);
+        Member member = memberService.findMemberById(userDetails.getMemberId());
+        ProductResponse response = productService.updateProduct(productId, request, member);
 
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "상품 삭제")
     @DeleteMapping("/{productId}")
-    public ResponseEntity<DeleteResponse> deleteProduct(@PathVariable("productId") Long productId) {
-        productService.deleteProduct(productId);
-        DeleteResponse response = new DeleteResponse("상품이 성공적으로 삭제되었습니다.");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable("productId") Long productId,
+                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Member member = memberService.findMemberById(userDetails.getMemberId());
+        productService.deleteProduct(productId, member);
+        return ResponseEntity.ok(Map.of("message", "상품이 삭제되었습니다."));
     }
 }

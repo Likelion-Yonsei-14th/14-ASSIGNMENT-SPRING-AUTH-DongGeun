@@ -35,7 +35,7 @@ public class Member {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    public static Member create(String nickname, String email, String password, Role role) {
+    public static Member create(String email, String password, String nickname) {
         Member member = new Member();
         member.email = email;
         member.password = password;

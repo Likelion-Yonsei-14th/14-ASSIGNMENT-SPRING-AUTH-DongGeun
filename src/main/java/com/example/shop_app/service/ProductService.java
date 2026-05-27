@@ -7,6 +7,7 @@ import com.example.shop_app.dto.ProductResponse;
 import com.example.shop_app.dto.ProductUpdateRequest;
 import com.example.shop_app.exception.CustomException;
 import com.example.shop_app.exception.ErrorCode;
+import com.example.shop_app.exception.ForbiddenException;
 import com.example.shop_app.exception.ProductNotFoundException;
 import com.example.shop_app.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,9 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final MemberService memberService;
 
-    public ProductResponse createProduct(ProductCreateRequest request) {
+    public ProductResponse createProduct(ProductCreateRequest request, Member member) {
         validateProduct(request.getName(), request.getDescription(), request.getPrice());
-
-        Member member = memberService.findById(request.getSellerId());
 
         Product product = Product.create(member, request.getName(), request.getDescription(),request.getPrice());
         Product savedProduct = productRepository.save(product);
@@ -46,11 +44,13 @@ public class ProductService {
             .toList();
     }
 
-    public ProductResponse updateProduct(Long productId, ProductUpdateRequest request) {
+    public ProductResponse updateProduct(Long productId, ProductUpdateRequest request, Member member) {
         validateProduct(request.getName(), request.getDescription(), request.getPrice());
 
         Product product = productRepository.findById(productId)
             .orElseThrow(ProductNotFoundException::new);
+        
+        validateOwner(product, member);
 
         product.updateProduct(request.getName(), request.getDescription(), request.getPrice());
         Product savedProduct = productRepository.save(product);
@@ -58,9 +58,11 @@ public class ProductService {
         return ProductResponse.from(savedProduct);
     }
 
-    public void deleteProduct(Long productId) {
+    public void deleteProduct(Long productId, Member member) {
         Product product = productRepository.findById(productId)
             .orElseThrow(ProductNotFoundException::new);
+        
+        validateOwner(product, member);
 
         productRepository.delete(product);
     }
@@ -74,6 +76,12 @@ public class ProductService {
         }
         if (price <= 0) {
             throw new CustomException(ErrorCode.INVALID_PRODUCT_PRICE);
+        }
+    }
+
+    private void validateOwner(Product product, Member member) {
+        if (!product.getMember().getId().equals(member.getId())) {
+            throw new ForbiddenException();
         }
     }
 }
