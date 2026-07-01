@@ -14,11 +14,11 @@ public class SwaggerConfig {
 
     String securitySchemeName = "Bearer Authentication";
     @Bean
-    public OpenAPI feedAppOpenAPI() {
+    public OpenAPI shopAppOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Feed App API")
-                        .description("Feed App CRUD 실습 API 문서")
+                        .title("Shop App API")
+                        .description("Shop App CRUD assignment API document")
                         .version("v1.0.0"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()

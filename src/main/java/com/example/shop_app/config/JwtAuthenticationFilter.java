@@ -52,11 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
-        if (authorization != null && !authorization.isBlank()) {
+        if (authorization == null || authorization.isBlank()) {
             return null;
         }
-        if (authorization.startsWith("Bearer ")) {
-            return authorization;
+        if (!authorization.startsWith("Bearer ")) {
+            return null;
         }
         return authorization.substring(7);
     }

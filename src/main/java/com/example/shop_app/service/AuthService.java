@@ -34,6 +34,14 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        Member member = authenticate(request);
+
+        String accessToken = jwtTokenProvider.createToken(member);
+
+        return LoginResponse.of(accessToken, member);
+    }
+
+    public Member authenticate(LoginRequest request) {
         Member member = memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(LoginFailedException::new);
 
@@ -41,8 +49,6 @@ public class AuthService {
             throw new LoginFailedException();
         }
 
-        String accessToken = jwtTokenProvider.createToken(member);
-
-        return LoginResponse.of(accessToken, member);
+        return member;
     }
 }
